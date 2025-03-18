@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulación de Nómina - Acuerdo 006</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Librería Chart.js -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            margin: 20px;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #444;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        canvas {
+            margin: 20px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Simulación de Nómina - Acuerdo 006</h1>
+        <canvas id="salariosChart"></canvas> <!-- Gráfico de salarios -->
+        <h2>Detalles de los Profesores</h2>
+        <table id="profesoresTable"></table> <!-- Tabla dinámica -->
+        <button onclick="simularContrataciones()">Simular Contrataciones Masivas</button>
+    </div>
+
+    <script>
+        // Datos iniciales
+        let profesores = [
+            { nombre: "Profesor A", tipoContrato: "Por Asignatura", horas: 40, valorHora: 50000, duracion: 4 },
+            { nombre: "Profesor B", tipoContrato: "Medio Tiempo", horas: 20, valorHora: 60000, duracion: 6 },
+            { nombre: "Profesor C", tipoContrato: "Por Asignatura", horas: 25, valorHora: 55000, duracion: 3 }
+        ];
+
+        // Función para calcular el salario mensual
+        function calcularSalario(profesor) {
+            return profesor.horas * profesor.valorHora * profesor.duracion;
+        }
+
+        // Calcular la nómina total
+        function calcularNomina() {
+            const salarios = [];
+            let nominaTotal = 0;
+            profesores.forEach(profesor => {
+                const salario = calcularSalario(profesor);
+                salarios.push(salario);
+                nominaTotal += salario;
+            });
+            return { salarios, nominaTotal };
+        }
+
+        // Mostrar resultados en una tabla
+        function mostrarTabla() {
+            const tabla = document.getElementById("profesoresTable");
+            const encabezados = `
+                <tr>
+                    <th>Nombre</th>
+                    <th>Tipo de Contrato</th>
+                    <th>Horas Contratadas</th>
+                    <th>Valor Hora (COP)</th>
+                    <th>Duración (Meses)</th>
+                    <th>Salario Total (COP)</th>
+                </tr>`;
+            const filas = profesores.map(profesor => {
+                const salario = calcularSalario(profesor).toLocaleString();
+                return `
+                    <tr>
+                        <td>${profesor.nombre}</td>
+                        <td>${profesor.tipoContrato}</td>
+                        <td>${profesor.horas}</td>
+                        <td>${profesor.valorHora.toLocaleString()}</td>
+                        <td>${profesor.duracion}</td>
+                        <td>${salario}</td>
+                    </tr>`;
+            }).join('');
+            tabla.innerHTML = encabezados + filas;
+        }
+
+        // Renderizar gráficos
+        function renderizarGrafico() {
+            const { salarios } = calcularNomina();
+            const ctx = document.getElementById('salariosChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: profesores.map(p => p.nombre),
+                    datasets: [{
+                        label: 'Salarios Totales (COP)',
+                        data: salarios,
+                        backgroundColor: ['blue', 'green', 'orange']
+                    }]
+                },
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Salarios Totales por Profesor'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Simular contrataciones masivas
+        function simularContrataciones() {
+            profesores.push(
+                { nombre: "Profesor D", tipoContrato: "Por Asignatura", horas: 50, valorHora: 52000, duracion: 5 },
+                { nombre: "Profesor E", tipoContrato: "Medio Tiempo", horas: 30, valorHora: 58000, duracion: 6 }
+            );
+            alert("¡Se han añadido nuevos profesores ocasionales!");
+            mostrarTabla();
+            renderizarGrafico();
+        }
+
+        // Inicializar
+        mostrarTabla();
+        renderizarGrafico();
+    </script>
+</body>
+</html>

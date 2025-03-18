@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulación de Nómina Docente Completa</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Librería Chart.js -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            margin: 20px;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #444;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        canvas {
+            margin: 20px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Simulación de Nómina Docente Completa</h1>
+        <canvas id="nominaChart"></canvas> <!-- Gráfico de distribución -->
+        <h2>Detalles de los Profesores</h2>
+        <table id="profesoresTable"></table> <!-- Tabla con detalles -->
+        <button onclick="simularContrataciones()">Simular Contrataciones Masivas</button>
+    </div>
+
+    <script>
+        // Datos iniciales de profesores de planta (Decreto 1279)
+        const profesoresPlanta = [
+            { nombre: "Profesor A", categoria: "Auxiliar", salarioBase: 3000000, produccion: 10, experiencia: 5 },
+            { nombre: "Profesor B", categoria: "Asociado", salarioBase: 4000000, produccion: 15, experiencia: 10 },
+            { nombre: "Profesor C", categoria: "Titular", salarioBase: 5000000, produccion: 20, experiencia: 15 }
+        ];
+
+        // Datos iniciales de profesores ocasionales (Acuerdo 006)
+        const profesoresOcasionales = [
+            { nombre: "Profesor D", tipoContrato: "Por Asignatura", horas: 40, valorHora: 50000, duracion: 4 },
+            { nombre: "Profesor E", tipoContrato: "Medio Tiempo", horas: 20, valorHora: 60000, duracion: 6 },
+            { nombre: "Profesor F", tipoContrato: "Por Asignatura", horas: 25, valorHora: 55000, duracion: 3 }
+        ];
+
+        // Función para calcular el salario total de profesores de planta
+        function calcularSalarioPlanta(profesor) {
+            const incentivoProduccion = profesor.salarioBase * 0.02 * profesor.produccion;
+            const incentivoExperiencia = profesor.salarioBase * 0.01 * profesor.experiencia;
+            return profesor.salarioBase + incentivoProduccion + incentivoExperiencia;
+        }
+
+        // Función para calcular el salario total de profesores ocasionales
+        function calcularSalarioOcasional(profesor) {
+            return profesor.horas * profesor.valorHora * profesor.duracion;
+        }
+
+        // Unir ambos tipos de profesores en una sola lista
+        function obtenerListaCompleta() {
+            const profesores = [];
+
+            // Procesar profesores de planta
+            profesoresPlanta.forEach(profesor => {
+                const salario = calcularSalarioPlanta(profesor);
+                profesores.push({
+                    nombre: profesor.nombre,
+                    tipo: "Planta",
+                    categoria: profesor.categoria,
+                    salarioBase: profesor.salarioBase,
+                    produccion: profesor.produccion,
+                    experiencia: profesor.experiencia,
+                    horas: "N/A",
+                    duracion: "Permanente",
+                    salario: salario
+                });
+            });
+
+            // Procesar profesores ocasionales
+            profesoresOcasionales.forEach(profesor => {
+                const salario = calcularSalarioOcasional(profesor);
+                profesores.push({
+                    nombre: profesor.nombre,
+                    tipo: "Ocasional",
+                    categoria: profesor.tipoContrato,
+                    salarioBase: "N/A",
+                    produccion: "N/A",
+                    experiencia: "N/A",
+                    horas: profesor.horas,
+                    duracion: profesor.duracion + " meses",
+                    salario: salario
+                });
+            });
+
+            return profesores;
+        }
+
+        // Mostrar tabla con todos los profesores
+        function mostrarTabla() {
+            const tabla = document.getElementById("profesoresTable");
+            const listaCompleta = obtenerListaCompleta();
+            const encabezados = `
+                <tr>
+                    <th>Nombre</th>
+                    <th>Tipo</th>
+                    <th>Categoría</th>
+                    <th>Salario Base (COP)</th>
+                    <th>Producción Académica</th>
+                    <th>Experiencia (años)</th>
+                    <th>Horas Contratadas</th>
+                    <th>Duración</th>
+                    <th>Salario Total (COP)</th>
+                </tr>`;
+            const filas = listaCompleta.map(profesor => `
+                <tr>
+                    <td>${profesor.nombre}</td>
+                    <td>${profesor.tipo}</td>
+                    <td>${profesor.categoria}</td>
+                    <td>${profesor.salarioBase.toLocaleString()}</td>
+                    <td>${profesor.produccion}</td>
+                    <td>${profesor.experiencia}</td>
+                    <td>${profesor.horas}</td>
+                    <td>${profesor.duracion}</td>
+                    <td>${profesor.salario.toLocaleString()}</td>
+                </tr>`).join('');
+            tabla.innerHTML = encabezados + filas;
+        }
+
+        // Renderizar gráfico de distribución de nómina
+        function renderizarGrafico() {
+            const listaCompleta = obtenerListaCompleta();
+            const ctx = document.getElementById('nominaChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: listaCompleta.map(p => p.nombre),
+                    datasets: [{
+                        label: 'Salarios Totales (COP)',
+                        data: listaCompleta.map(p => p.salario),
+                        backgroundColor: 'blue'
+                    }]
+                },
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Distribución de Nómina por Profesor'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Simular contrataciones masivas
+        function simularContrataciones() {
+            profesoresPlanta.push(
+                { nombre: "Profesor G", categoria: "Titular", salarioBase: 5000000, produccion: 25, experiencia: 20 }
+            );
+            profesoresOcasionales.push(
+                { nombre: "Profesor H", tipoContrato: "Por Asignatura", horas: 50, valorHora: 52000, duracion: 6 }
+            );
+            alert("¡Se han añadido contrataciones masivas!");
+            mostrarTabla();
+            renderizarGrafico();
+        }
+
+        // Inicializar simulación
+        mostrarTabla();
+        renderizarGrafico();
+    </script>
+</body>
+</html>
